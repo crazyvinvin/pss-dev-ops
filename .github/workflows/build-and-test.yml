@@ -16,10 +16,6 @@ on:
         required: false
         type: string
         default: './'
-    secrets:
-      SONAR_TOKEN:
-        description: 'SonarQube/SonarCloud analysis token.'
-        required: false
 
 jobs:
   build-and-test:
@@ -52,26 +48,3 @@ jobs:
             --no-build \
             --logger trx \
             --results-directory "TestResults"
-            
-      # SonarQube steps are integrated here for continuous code quality
-      - name: Install Java for SonarScanner
-        # SonarScanner typically requires Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          
-      - name: Download SonarScanner
-        uses: SonarSource/sonarcloud-github-action@v2.3.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            /k:"ridered-${{ inputs.service_name }}"
-            /d:sonar.host.url="YOUR_SONARQUBE_URL" # REPLACE
-            /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-            /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/**/*.xml"
-            /d:sonar.projectBaseDir="${{ inputs.service_name }}"
-            /d:sonar.exclusions="**/*.Tests/**,**/obj/**,**/bin/**"
-            /d:sonar.verbose=true

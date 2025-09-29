@@ -3,9 +3,9 @@ name: Docker Build & Push to GAR
 on:
   workflow_call:
     inputs:
-      service_name:
-        description: 'Name of the service/repository being built.'
-        required: true
+      dockerfile_path:
+        description: 'Path to the Dockerfile.'
+        required: false
         type: string
       image_tag:
         description: 'The tag to use for the Docker image (e.g., git SHA, version).'
@@ -50,7 +50,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v5
         with:
-          context: ./${{ inputs.service_name }} # Assumes Dockerfile is in the service directory
+          context: ${{ inputs.dockerfile_path }}
           push: true
           tags: ${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.service_name }}:${{ inputs.image_tag }}
           # Use cache for faster builds
