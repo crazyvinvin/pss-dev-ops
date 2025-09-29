@@ -40,13 +40,12 @@ jobs:
     - name: 1. Begin Sonar Analysis
       run: |
         dotnet sonarscanner begin \
-          /k:"${{ inputs.project_key }}" \
-          /o:"${{ inputs.organization_key }}" \
-          /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-          /d:sonar.host.url="https://sonarcloud.io" # Assuming SonarCloud
-          /d:sonar.cs.opencover.reportsPaths='${{ github.workspace }}/coverage/coverage.xml'
+          -k:"${{ inputs.project_key }}" \
+          -o:"${{ inputs.organization_key }}" \
+          -d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+          -d:sonar.host.url="https://sonarcloud.io" # Assuming SonarCloud
+          -d:sonar.cs.opencover.reportsPaths='${{ github.workspace }}/coverage/coverage.xml'
 
-          
     - name: 2. Build Solution
       run: dotnet build ${{ inputs.solution_path }} --configuration Release
       
@@ -54,9 +53,9 @@ jobs:
       run: |
         dotnet test ${{ inputs.solution_path }} \
           --configuration Release \
-          /p:CollectCoverage=true \
-          /p:CoverletOutputFormat=opencover \
-          /p:CoverletOutput='${{ github.workspace }}/coverage/' \
+          -p:CollectCoverage=true \
+          -p:CoverletOutputFormat=opencover \
+          -p:CoverletOutput='${{ github.workspace }}/coverage/' \
           --no-build \
           --logger trx \
           --results-directory "TestResults"
