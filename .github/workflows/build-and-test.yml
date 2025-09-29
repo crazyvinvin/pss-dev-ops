@@ -11,6 +11,11 @@ on:
         description: 'The .NET SDK version to use.'
         required: true
         type: string
+      solution_file_path:
+        description: 'Path to the solution file for testing.'
+        required: false
+        type: string
+        default: './'
     secrets:
       SONAR_TOKEN:
         description: 'SonarQube/SonarCloud analysis token.'
@@ -36,11 +41,18 @@ jobs:
 
       - name: Build Project
         run: dotnet build ${{ inputs.service_name }}/${{ inputs.service_name }}.csproj --configuration Release --no-restore
-
-      - name: Run Tests
-        # Ensure your test project is named: <Service_Name>.Tests
-        run: dotnet test ${{ inputs.service_name }}/${{ inputs.service_name }}.Tests/${{ inputs.service_name }}.Tests.csproj --configuration Release --no-build --logger trx --results-directory "TestResults"
         
+      - name: Run Tests & Collect Coverage
+        run: |
+          dotnet test ${{ inputs.solution_file_path }} \
+            --configuration Release \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=opencover \
+            /p:CoverletOutput='${{ github.workspace }}/coverage/' \
+            --no-build \
+            --logger trx \
+            --results-directory "TestResults"
+            
       # SonarQube steps are integrated here for continuous code quality
       - name: Install Java for SonarScanner
         # SonarScanner typically requires Java
