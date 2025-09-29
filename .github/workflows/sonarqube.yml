@@ -2,19 +2,65 @@ name: SonarQube Analysis
 
 on:
   workflow_call:
+    inputs:
+      project_key:
+        description: 'The Sonar project key.'
+        required: true
+        type: string
+      organization_key:
+        description: 'The Sonar organization key.'
+        required: true
+        type: string
+      solution_path:
+        description: 'Path to the .slnx file (e.g., MCSynergy.RideR.PlaceService.slnx)'
+        required: true
+        type: string
     secrets:
         SONAR_TOKEN:
-            description: 'SonarQube/SonarCloud analysis token.'
-            required: true
+          description: 'SonarQube/SonarCloud analysis token.'
+          required: true
 
 jobs:
   sonarqube:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
       with:
-        fetch-depth: 0
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@v6.0.0
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        fetch-depth: 0 
+        
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.x' 
+        
+    - name: Install SonarScanner .NET CLI Tool
+      run: dotnet tool install --global dotnet-sonarscanner
+      
+    - name: 1. Begin Sonar Analysis
+      run: |
+        dotnet sonarscanner begin \
+          /k:"${{ inputs.project_key }}" \
+          /o:"${{ inputs.organization_key }}" \
+          /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+          /d:sonar.host.url="https://sonarcloud.io" # Assuming SonarCloud
+          /d:sonar.cs.opencover.reportsPaths='${{ github.workspace }}/coverage/coverage.xml'
+
+          
+    - name: 2. Build Solution
+      run: dotnet build ${{ inputs.solution_path }} --configuration Release
+      
+    - name: 3. Run Tests & Collect Coverage
+      run: |
+        dotnet test ${{ inputs.solution_path }} \
+          --configuration Release \
+          /p:CollectCoverage=true \
+          /p:CoverletOutputFormat=opencover \
+          /p:CoverletOutput='${{ github.workspace }}/coverage/' \
+          --no-build \
+          --logger trx \
+          --results-directory "TestResults"
+      
+    - name: 4. End Sonar Analysis
+      # END command uploads the analysis report to SonarCloud
+      run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
