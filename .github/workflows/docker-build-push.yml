@@ -11,6 +11,10 @@ on:
         description: 'The tag to use for the Docker image (e.g., git SHA, version).'
         required: true
         type: string
+      service_name:
+        description: 'Name of the service/repository being built (used for image name).'
+        required: true
+        type: string
     secrets:
       GCP_SA_KEY:
         description: 'The JSON key for a GCP Service Account with Artifact Registry Writer permissions.'
