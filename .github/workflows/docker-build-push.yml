@@ -49,8 +49,6 @@ jobs:
         run: gcloud auth configure-docker ${{ secrets.GAR_LOCATION }}-docker.pkg.dev
         
       - name: Build and Push Docker Image
-        # Define the full image name
-        # e.g., europe-west4-docker.pkg.dev/project-id/ride-r-repo/place-api:sha-abc1234
         id: docker_build
         uses: docker/build-push-action@v5
         with:
